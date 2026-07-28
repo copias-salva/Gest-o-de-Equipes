@@ -2,7 +2,7 @@ name: Gerar App Desktop Windows (.exe)
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "principal", "main", "master" ]
   workflow_dispatch:
 
 jobs:
