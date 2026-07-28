@@ -1,0 +1,25 @@
+{
+  "name": "gestao-equipes-desktop",
+  "version": "1.0.0",
+  "description": "App Desktop de Gestao de Setores e Funcionarios",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.gestao.equipes",
+    "productName": "Gestao de Equipes",
+    "files": [
+      "index.html",
+      "main.js"
+    ],
+    "win": {
+      "target": "portable"
+    }
+  }
+}
