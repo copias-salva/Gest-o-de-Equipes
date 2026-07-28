@@ -1,0 +1,31 @@
+name: Gerar App Desktop Windows (.exe)
+
+on:
+  push:
+    branches: [ "principal", "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Dependencias
+        run: npm install
+
+      - name: Compilar Executavel Windows
+        run: npm run dist
+
+      - name: Disponibilizar o Executavel para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gestao-Equipes-Windows
+          path: dist/*.exe
