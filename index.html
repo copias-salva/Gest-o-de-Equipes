@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Setores e Funcionários</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --secondary: #0d9488;
+            --secondary-hover: #0f766e;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #cbd5e1;
+            --radius: 12px;
+            --shadow: 0 10px 25px -5px rgba(0, 100, 200, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body { 
+            /* Fundo Gradiente Azul Tecnológico + Estampa Hexagonal Dinâmica */
+            background-color: #e0f2fe;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.8) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cg fill='none' stroke='%2338bdf8' stroke-width='1.5' opacity='0.35'%3E%3Cpath d='M30 0 L60 17 L60 52 L30 69 L0 52 L0 17 Z'/%3E%3Cpath d='M90 0 L120 17 L120 52 L90 69 L60 52 L60 17 Z'/%3E%3Cpath d='M60 52 L90 69 L90 104 L60 121 L30 104 L30 69 Z'/%3E%3Cpath d='M30 3.5 L57 19 L57 50 L30 65.5 L3 50 L3 19 Z' stroke='%23ffffff' stroke-width='1' opacity='0.5'/%3E%3Cpolygon points='90,17 105,25.5 105,43.5 90,52 75,43.5 75,25.5' fill='%2338bdf8' fill-opacity='0.12' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+            background-attachment: fixed;
+            color: var(--text-main); 
+            padding: 2rem; 
+            min-height: 100vh;
+        }
+
+        /* CABEÇALHO COM BOTÃO DE TOGGLE */
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header-top h1 { 
+            font-size: 2.2rem; 
+            color: #0369a1; 
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+            font-weight: 800;
+        }
+
+        .btn-toggle {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            color: var(--primary);
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .btn-toggle:hover { background: #fff; transform: translateY(-1px); }
+
+        /* LAYOUT PRINCIPAL (COLUNAS) */
+        .app-container { 
+            display: flex; 
+            gap: 2rem; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            align-items: flex-start;
+        }
+
+        /* BARRA LATERAL (CADASTROS) */
+        .sidebar {
+            width: 360px;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+            padding-right: 0.5rem;
+        }
+
+        /* Estilo da barra de rolagem da sidebar */
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+
+        .sidebar.collapsed {
+            width: 0;
+            opacity: 0;
+            margin-right: -2rem; /* Remove o espaço do gap quando fechado */
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* ÁREA PRINCIPAL (SETORES) */
+        .main-content {
+            flex: 1;
+            min-width: 0; /* Previne que flexbox expanda além da tela */
+            transition: all 0.4s ease;
+        }
+
+        .controls-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .panel-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 0.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;}
+
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; }
+
+        label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        input, select {
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+            background: #fff;
+            width: 100%;
+        }
+
+        input[type="color"] { padding: 0.2rem; height: 42px; cursor: pointer; }
+        input[type="file"] { padding: 0.4rem; font-size: 0.85rem; }
+
+        .btn {
+            padding: 0.63rem 1.2rem; border: none; border-radius: 6px; font-weight: 600;
+            cursor: pointer; transition: 0.2s; width: 100%; text-align: center;
+        }
+
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: var(--secondary); color: #fff; padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; }
+        .btn-secondary:hover { background: var(--secondary-hover); }
+        .btn-danger { background: var(--danger); color: #fff; padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; }
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        .action-buttons { display: flex; gap: 0.5rem; }
+
+        /* ESTILOS DOS CARDS DE SETOR (Inalterados, apenas adaptados ao novo container) */
+        .sector-card {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .sector-header { color: #fff; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .sector-title-container { display: flex; align-items: center; gap: 1rem; }
+        .sector-img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid #fff; background: #e2e8f0; }
+        
+        .table-container { padding: 1rem; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: rgba(241, 245, 249, 0.8); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; padding: 0.8rem; }
+        td { padding: 0.8rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        
+        .user-cell { display: flex; align-items: center; gap: 0.8rem; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #e2e8f0; flex-shrink: 0; border: 2px solid var(--primary); }
+        .user-name { font-weight: 600; color: var(--text-main); }
+        .user-email, .user-phone, .user-workhours { font-size: 0.85rem; color: var(--text-muted); word-break: break-all; }
+        .user-phone, .user-workhours { margin-top: 2px; }
+        .badge-hours { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+
+        /* MODAL DE EDIÇÃO */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg); border-radius: var(--radius); padding: 2rem;
+            width: 100%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.8rem; }
+        .modal-header h3 { font-size: 1.2rem; color: var(--text-main); }
+        .modal-body { display: flex; flex-direction: column; gap: 1rem; max-height: 70vh; overflow-y: auto; padding-right: 0.3rem; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 0.8rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+        .btn-cancel { background: #94a3b8; color: #fff; width: auto; }
+        .btn-cancel:hover { background: #64748b; }
+        .modal-footer .btn-primary { width: auto; }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 900px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; max-height: none; overflow-y: visible; }
+            .sidebar.collapsed { display: none; } /* Em mobile apenas esconde para economizar espaço */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-top">
+        <button class="btn-toggle" onclick="toggleSidebar()" id="btnToggle">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            Ocultar Cadastros
+        </button>
+        <h1>Gestão de Equipes</h1>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <aside class="sidebar" id="sidebar">
+            
+            <!-- FORMULÁRIO NOVO SETOR -->
+            <div class="controls-panel">
+                <div class="panel-title">1. Novo Setor</div>
+                <div class="form-group">
+                    <label>Nome do Setor</label>
+                    <input type="text" id="sectorName" placeholder="Ex: Recursos Humanos">
+                </div>
+                <div class="form-group">
+                    <label>Cor do Setor</label>
+                    <input type="color" id="sectorColor" value="#0284c7">
+                </div>
+                <div class="form-group">
+                    <label>Foto do Setor (Computador)</label>
+                    <input type="file" id="sectorImageFile" accept="image/*">
+                </div>
+                <button class="btn btn-primary" onclick="addSector()">+ Criar Setor</button>
+            </div>
+
+            <!-- FORMULÁRIO NOVO FUNCIONÁRIO -->
+            <div class="controls-panel">
+                <div class="panel-title">2. Novo Funcionário</div>
+                <div class="form-group">
+                    <label>Vincular ao Setor</label>
+                    <select id="employeeSectorSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="empName" placeholder="Ex: João Souza">
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="empEmail" placeholder="joao@empresa.com" autocomplete="off" spellcheck="false" autocapitalize="off">
+                </div>
+                <div class="form-group">
+                    <label>Telefone / WhatsApp</label>
+                    <input type="tel" id="empPhone" placeholder="(11) 99999-9999" autocomplete="off">
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <div class="form-group">
+                        <label>Entrada</label>
+                        <input type="time" id="empStartTime">
+                    </div>
+                    <div class="form-group">
+                        <label>Saída</label>
+                        <input type="time" id="empEndTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cargo</label>
+                    <input type="text" id="empRole" placeholder="Ex: Gestor de Projetos">
+                </div>
+                <div class="form-group">
+                    <label>Cor do Perfil</label>
+                    <input type="color" id="empThemeColor" value="#0284c7">
+                </div>
+                <div class="form-group">
+                    <label>Foto de Perfil (Computador)</label>
+                    <input type="file" id="empPhotoFile" accept="image/*">
+                </div>
+                <button class="btn btn-primary" onclick="addEmployee()">+ Adicionar Funcionário</button>
+            </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL (LISTA DE SETORES) -->
+        <main class="main-content">
+            <div id="sectorsList"></div>
+        </main>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DO FUNCIONÁRIO -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Funcionário</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editSectorId">
+                <input type="hidden" id="editEmpId">
+
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="editEmpName">
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="editEmpEmail" autocomplete="off" spellcheck="false" autocapitalize="off">
+                </div>
+                <div class="form-group">
+                    <label>Telefone / WhatsApp</label>
+                    <input type="tel" id="editEmpPhone" autocomplete="off">
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <div class="form-group">
+                        <label>Entrada</label>
+                        <input type="time" id="editEmpStartTime">
+                    </div>
+                    <div class="form-group">
+                        <label>Saída</label>
+                        <input type="time" id="editEmpEndTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cargo</label>
+                    <input type="text" id="editEmpRole">
+                </div>
+                <div class="form-group">
+                    <label>Cor do Perfil</label>
+                    <input type="color" id="editEmpThemeColor">
+                </div>
+                <div class="form-group">
+                    <label>Alterar Foto de Perfil (Opcional)</label>
+                    <input type="file" id="editEmpPhotoFile" accept="image/*">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveEmployeeEdit()">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- FUNÇÃO PARA EXPANDIR/RECOLHER A BARRA LATERAL ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btnToggle = document.getElementById('btnToggle');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                btnToggle.innerHTML = `
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Exibir Cadastros
+                `;
+            } else {
+                btnToggle.innerHTML = `
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    Ocultar Cadastros
+                `;
+            }
+        }
+
+        // --- GERENCIAMENTO BANCO DE DADOS (INDEXEDDB) ---
+        let db;
+        const request = indexedDB.open("EmpresaDB", 1);
+
+        request.onupgradeneeded = function(e) {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains("sectors")) {
+                db.createObjectStore("sectors", { keyPath: "id" });
+            }
+        };
+
+        request.onsuccess = function(e) {
+            db = e.target.result;
+            render();
+        };
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) resolve("");
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function getAllSectorsFromDB(callback) {
+            const tx = db.transaction("sectors", "readonly");
+            const store = tx.objectStore("sectors");
+            const req = store.getAll();
+            req.onsuccess = () => callback(req.result);
+        }
+
+        function saveSectorToDB(sector, callback) {
+            const tx = db.transaction("sectors", "readwrite");
+            const store = tx.objectStore("sectors");
+            store.put(sector);
+            tx.oncomplete = () => callback();
+        }
+
+        function deleteSectorFromDB(id, callback) {
+            const tx = db.transaction("sectors", "readwrite");
+            const store = tx.objectStore("sectors");
+            store.delete(id);
+            tx.oncomplete = () => callback();
+        }
+
+        // --- RENDERIZAÇÃO ---
+        function render() {
+            getAllSectorsFromDB(sectors => {
+                const container = document.getElementById('sectorsList');
+                const select = document.getElementById('employeeSectorSelect');
+                
+                container.innerHTML = '';
+                select.innerHTML = '';
+
+                if (sectors.length === 0) {
+                    select.innerHTML = '<option value="">Nenhum setor cadastrado</option>';
+                    container.innerHTML = `
+                        <div style="background: var(--card-bg); padding: 3rem; text-align: center; border-radius: var(--radius); border: 1px dashed var(--primary); backdrop-filter: blur(8px);">
+                            <h3 style="color: var(--primary); margin-bottom: 0.5rem;">Nenhum setor encontrado</h3>
+                            <p style="color: var(--text-muted);">Utilize o painel ao lado para cadastrar seu primeiro setor e adicionar funcionários.</p>
+                        </div>`;
+                    return;
+                }
+
+                sectors.forEach(sector => {
+                    const option = document.createElement('option');
+                    option.value = sector.id;
+                    option.textContent = sector.name;
+                    select.appendChild(option);
+
+                    const card = document.createElement('div');
+                    card.className = 'sector-card';
+
+                    const headerColor = sector.color || '#0284c7';
+
+                    card.innerHTML = `
+                        <div class="sector-header" style="background: ${headerColor};">
+                            <div class="sector-title-container">
+                                <img class="sector-img" src="${sector.image || 'https://via.placeholder.com/200'}" alt="">
+                                <h2></h2>
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteSector(${sector.id})">Excluir Setor</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Funcionário / Contato</th>
+                                        <th>Cargo</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    card.querySelector('h2').textContent = sector.name;
+                    const tbody = card.querySelector('tbody');
+
+                    if (!sector.employees || sector.employees.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum funcionário cadastrado neste setor.</td></tr>';
+                    } else {
+                        sector.employees.forEach(emp => {
+                            const tr = document.createElement('tr');
+                            const userThemeColor = emp.themeColor || '#0284c7';
+
+                            const tdUser = document.createElement('td');
+                            const userCell = document.createElement('div');
+                            userCell.className = 'user-cell';
+
+                            const img = document.createElement('img');
+                            img.className = 'user-avatar';
+                            img.style.borderColor = userThemeColor;
+                            img.src = emp.photo || 'https://via.placeholder.com/150';
+
+                            const infoDiv = document.createElement('div');
+                            const nameDiv = document.createElement('div');
+                            nameDiv.className = 'user-name';
+                            nameDiv.textContent = emp.name;
+
+                            const emailDiv = document.createElement('div');
+                            emailDiv.className = 'user-email';
+                            emailDiv.textContent = emp.email ? `✉ ${emp.email}` : 'E-mail não informado';
+
+                            const phoneDiv = document.createElement('div');
+                            phoneDiv.className = 'user-phone';
+                            phoneDiv.textContent = emp.phone ? `📞 ${emp.phone}` : 'Telefone não informado';
+
+                            const hoursDiv = document.createElement('div');
+                            hoursDiv.className = 'user-workhours';
+                            if (emp.startTime || emp.endTime) {
+                                hoursDiv.innerHTML = `⏰ Jornada: <span class="badge-hours" style="background: ${userThemeColor}22; color: ${userThemeColor};">${emp.startTime || '--:--'} às ${emp.endTime || '--:--'}</span>`;
+                            } else {
+                                hoursDiv.textContent = '⏰ Horário não informado';
+                            }
+
+                            infoDiv.appendChild(nameDiv);
+                            infoDiv.appendChild(emailDiv);
+                            infoDiv.appendChild(phoneDiv);
+                            infoDiv.appendChild(hoursDiv);
+
+                            userCell.appendChild(img);
+                            userCell.appendChild(infoDiv);
+                            tdUser.appendChild(userCell);
+
+                            const tdRole = document.createElement('td');
+                            tdRole.textContent = emp.role || 'Não definido';
+
+                            const tdActions = document.createElement('td');
+                            const actionGroup = document.createElement('div');
+                            actionGroup.className = 'action-buttons';
+
+                            const btnEdit = document.createElement('button');
+                            btnEdit.className = 'btn btn-secondary';
+                            btnEdit.textContent = 'Editar';
+                            btnEdit.onclick = () => openEditModal(sector.id, emp.id);
+
+                            const btnDelete = document.createElement('button');
+                            btnDelete.className = 'btn btn-danger';
+                            btnDelete.textContent = 'Excluir';
+                            btnDelete.onclick = () => deleteEmployee(sector.id, emp.id);
+
+                            actionGroup.appendChild(btnEdit);
+                            actionGroup.appendChild(btnDelete);
+                            tdActions.appendChild(actionGroup);
+
+                            tr.appendChild(tdUser);
+                            tr.appendChild(tdRole);
+                            tr.appendChild(tdActions);
+                            tbody.appendChild(tr);
+                        });
+                    }
+
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        // --- AÇÕES ---
+        async function addSector() {
+            const nameInput = document.getElementById('sectorName');
+            const colorInput = document.getElementById('sectorColor');
+            const fileInput = document.getElementById('sectorImageFile');
+
+            const name = nameInput.value.trim();
+            const color = colorInput.value;
+            const file = fileInput.files[0];
+
+            if (!name) return alert('Por favor, digite o nome do setor!');
+
+            const imageBase64 = await convertFileToBase64(file);
+
+            const newSector = {
+                id: Date.now(),
+                name: name,
+                color: color,
+                image: imageBase64,
+                employees: []
+            };
+
+            saveSectorToDB(newSector, () => {
+                nameInput.value = '';
+                fileInput.value = '';
+                render();
+            });
+        }
+
+        async function addEmployee() {
+            const sectorId = Number(document.getElementById('employeeSectorSelect').value);
+            const nameInput = document.getElementById('empName');
+            const emailInput = document.getElementById('empEmail');
+            const phoneInput = document.getElementById('empPhone');
+            const startTimeInput = document.getElementById('empStartTime');
+            const endTimeInput = document.getElementById('empEndTime');
+            const roleInput = document.getElementById('empRole');
+            const colorInput = document.getElementById('empThemeColor');
+            const fileInput = document.getElementById('empPhotoFile');
+
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            const role = roleInput.value.trim();
+            const themeColor = colorInput.value;
+            const file = fileInput.files[0];
+
+            if (!sectorId) return alert('Selecione ou crie um setor primeiro!');
+            if (!name) return alert('Por favor, digite o nome do funcionário!');
+            if (!email) return alert('Por favor, digite o e-mail do funcionário!');
+
+            const photoBase64 = await convertFileToBase64(file);
+
+            getAllSectorsFromDB(sectors => {
+                const sector = sectors.find(s => s.id === sectorId);
+                if (sector) {
+                    sector.employees.push({
+                        id: Date.now(),
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        startTime: startTime,
+                        endTime: endTime,
+                        role: role,
+                        themeColor: themeColor,
+                        photo: photoBase64
+                    });
+
+                    saveSectorToDB(sector, () => {
+                        nameInput.value = ''; emailInput.value = ''; phoneInput.value = '';
+                        startTimeInput.value = ''; endTimeInput.value = ''; roleInput.value = ''; fileInput.value = '';
+                        render();
+                    });
+                }
+            });
+        }
+
+        function openEditModal(sectorId, empId) {
+            getAllSectorsFromDB(sectors => {
+                const sector = sectors.find(s => s.id === sectorId);
+                if (!sector) return;
+                const emp = sector.employees.find(e => e.id === empId);
+                if (!emp) return;
+
+                document.getElementById('editSectorId').value = sectorId;
+                document.getElementById('editEmpId').value = empId;
+                document.getElementById('editEmpName').value = emp.name || '';
+                document.getElementById('editEmpEmail').value = emp.email || '';
+                document.getElementById('editEmpPhone').value = emp.phone || '';
+                document.getElementById('editEmpStartTime').value = emp.startTime || '';
+                document.getElementById('editEmpEndTime').value = emp.endTime || '';
+                document.getElementById('editEmpRole').value = emp.role || '';
+                document.getElementById('editEmpThemeColor').value = emp.themeColor || '#0284c7';
+                document.getElementById('editEmpPhotoFile').value = '';
+
+                document.getElementById('editModal').style.display = 'flex';
+            });
+        }
+
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        async function saveEmployeeEdit() {
+            const sectorId = Number(document.getElementById('editSectorId').value);
+            const empId = Number(document.getElementById('editEmpId').value);
+
+            const name = document.getElementById('editEmpName').value.trim();
+            const email = document.getElementById('editEmpEmail').value.trim();
+            const phone = document.getElementById('editEmpPhone').value.trim();
+            const startTime = document.getElementById('editEmpStartTime').value;
+            const endTime = document.getElementById('editEmpEndTime').value;
+            const role = document.getElementById('editEmpRole').value.trim();
+            const themeColor = document.getElementById('editEmpThemeColor').value;
+            const file = document.getElementById('editEmpPhotoFile').files[0];
+
+            if (!name) return alert('Por favor, digite o nome do funcionário!');
+            if (!email) return alert('Por favor, digite o e-mail do funcionário!');
+
+            getAllSectorsFromDB(async sectors => {
+                const sector = sectors.find(s => s.id === sectorId);
+                if (!sector) return;
+                const empIndex = sector.employees.findIndex(e => e.id === empId);
+                if (empIndex === -1) return;
+
+                let photoBase64 = sector.employees[empIndex].photo;
+                if (file) { photoBase64 = await convertFileToBase64(file); }
+
+                sector.employees[empIndex] = { id: empId, name: name, email: email, phone: phone, startTime: startTime, endTime: endTime, role: role, themeColor: themeColor, photo: photoBase64 };
+
+                saveSectorToDB(sector, () => { closeEditModal(); render(); });
+            });
+        }
+
+        function deleteSector(sectorId) {
+            if (confirm('Tem certeza que deseja excluir este setor e todos os seus funcionários?')) {
+                deleteSectorFromDB(sectorId, () => render());
+            }
+        }
+
+        function deleteEmployee(sectorId, empId) {
+            getAllSectorsFromDB(sectors => {
+                const sector = sectors.find(s => s.id === sectorId);
+                if (sector) {
+                    sector.employees = sector.employees.filter(e => e.id !== empId);
+                    saveSectorToDB(sector, () => render());
+                }
+            });
+        }
+    </script>
+</body>
+</html>
