@@ -17,6 +17,7 @@ jobs:
       with:
         node-version: 18
 
+    # PASSO NOVO: Instala o Pillow e gera o icon.ico automaticamente durante o build
     - name: Create App Icon
       run: |
         pip install pillow
@@ -43,9 +44,3 @@ jobs:
 
     - name: Build Electron App
       run: npm run dist
-
-    - name: Upload Executable
-      uses: actions/upload-artifact@v3
-      with:
-        name: GestaoDeEquipes-Windows
-        path: dist/*.exe
